@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <string.h>
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -40,8 +40,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart1; //USART1 장치의 상태/설정/버퍼 등을 담는 HAL 핸들
-UART_HandleTypeDef huart2; //Laptop - MCU test용
+UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
+static volatile uint8_t rx1;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -49,8 +50,8 @@ UART_HandleTypeDef huart2; //Laptop - MCU test용
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 
@@ -59,14 +60,13 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
-
-uint8_t rx_byte;
-static uint8_t rx;
-static void uart_start(void){
-  const char *hello = "READY\r\n";
-  HAL_UART_Transmit(&huart2, (uint8_t*)hello, strlen(hello), 100);
-  HAL_UART_Receive_IT(&huart2, &rx, 1); // ★ 수신 시작
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART1) {
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);       // ★ LED 토글
+    HAL_UART_Transmit(&huart1, (uint8_t*)&rx1, 1, 10); // 에코백
+    HAL_UART_Receive_IT(&huart1, (uint8_t*)&rx1, 1);   // 다음 바이트 재개
+  }
 }
 /* USER CODE END 0 */
 
@@ -99,12 +99,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init(); // 컴퓨터 - MCU
-  MX_USART1_UART_Init(); // SBC - MCU
+  MX_USART2_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   uint8_t c;
+  static volatile uint8_t rx1;
   //HAL_UART_Receive_IT(&huart1, &rx_byte, 1); // 1바이트 인터럽트 수신 시작
-
+  HAL_UART_Receive_IT(&huart1, (uint8_t*)&rx1, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -112,20 +113,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	    if (HAL_UART_Receive(&huart2,&c,1,50)==HAL_OK){ // 50ms 타임아웃
-	    	/*// moter.h, moter.c 에서 구현해야 하는 코드
-	    	switch(c){
-	        	case 'F': motor_set( ); break; //전진
-	        	case 'B': motor_set( ); break; //후진
-	        	case 'L': motor_turn( );  break; //회전
-	        	case 'R': motor_turn( );  break; //회전
-	        	case 'S': motor_stop();          break;
-	        	default: break; // ignore
-	    	}
-	    */
-	      HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);     // ★ 바이트 들어오면 LED 토글
-	      HAL_UART_Transmit(&huart2,&c,1,10);             // 에코백
-	    }
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -178,7 +166,21 @@ void SystemClock_Config(void)
   }
 }
 
-static void MX_USART1_UART_Init(void){
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
   huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
@@ -187,8 +189,16 @@ static void MX_USART1_UART_Init(void){
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  HAL_UART_Init(&huart1);
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
 }
+
 /**
   * @brief USART2 Initialization Function
   * @param None
@@ -255,14 +265,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA9 PA10 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
