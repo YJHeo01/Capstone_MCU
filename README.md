@@ -82,10 +82,9 @@
 ## 개발 환경
 - MCU: STM32 Nucleo-F446RE
 - IDE: STM32CubeIDE
-- 통신: UART
 - 딜리봇 MCU 보드와 주변장치(UART, 모터 드라이버)의 핀 연결은 다음과 같습니다.
 
-### UART (MCU ↔ Single Board Computer)
+### UART (MCU ↔ Single Board Computer Communication)
 
 | MCU 핀 | 기능        | 설명                    |
 |-------|------------|-------------------------|
