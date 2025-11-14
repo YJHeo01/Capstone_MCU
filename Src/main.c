@@ -36,7 +36,7 @@ typedef struct {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define WAIT 5
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,11 +48,9 @@ typedef struct {
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
-UART_HandleTypeDef huart2;
 
 static volatile weight rx;
 int state = 5;
-static volatile uint8_t rx1;
 
 int speedL = 0;
 int speedR = 0;
@@ -73,8 +71,6 @@ static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 extern TIM_HandleTypeDef htim3; // 예: TIM3_CH1=PWM1, CH2=PWM2 (20 kHz 권장)
-
-
 
 static inline int16_t clamp1000(int v){ if(v>1000) return 1000; if(v<-1000) return -1000; return (int16_t)v; }
 
@@ -151,7 +147,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   MX_TIM3_Init();
   DirPwm_Init(&motorL, &htim3, TIM_CHANNEL_1, GPIOB, GPIO_PIN_12, 1); // DIR1=PB12
@@ -163,8 +158,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-	  if(state==5) continue;
+	  if(state==WAIT) continue;
 	  switch(rx.command){
   	  	  case 0:
   	  		  Motors_Move_Back();
@@ -190,9 +184,10 @@ int main(void)
 	  	  default:
 	  		  break;
 	  }
-	  state = 5;
-    /* USER CODE BEGIN 3 */
+	  state = WAIT;
   }
+   /* USER CODE END WHILE */
+	/* USER CODE BEGIN 3 */
   /* USER CODE END 3 */
 }
 
