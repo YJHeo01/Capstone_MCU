@@ -69,17 +69,11 @@ DirPwmMotor motorR; // DIR2/PWM2
 static inline int16_t clamp1000(int v){ if(v>1000) return 1000; if(v<-1000) return -1000; return (int16_t)v; }
 
 static void Motors_Move_Front(void){
-    //for(int s=0; s<=1000; s+=50){ DirPwm_SetSpeed(&motorL, s); DirPwm_SetSpeed(&motorR, s); HAL_Delay(10);} HAL_Delay(150);
-    //for(int s=0; s>=-1000; s-=50){ DirPwm_SetSpeed(&motorL, s); DirPwm_SetSpeed(&motorR, s); HAL_Delay(10);} HAL_Delay(150);
-    // 제자리 회전
-    //for(int s=0; s<=1000; s+=50){ DirPwm_SetSpeed(&motorL, +s); DirPwm_SetSpeed(&motorR, -s); HAL_Delay(10);} HAL_Delay(150);
 	DirPwm_SetSpeed(&motorL, 500); DirPwm_SetSpeed(&motorR, 500);
-    //DirPwm_Coast(&motorL); DirPwm_Coast(&motorR); HAL_Delay(200);
 }
 
 static void Motors_Move_Back(void){
 	DirPwm_SetSpeed(&motorL,-500); DirPwm_SetSpeed(&motorR, -500);
-
 }
 
 static void Turn_Left(void){
