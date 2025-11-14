@@ -31,12 +31,18 @@ typedef struct {
 	int command;
 	float left;
 	float right;
-} weight;
+} data;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define MOVE_BACK 0
+#define TURN_RIGHT 1
+#define TURN_LEFT 2
+#define MOVE_FRONT 3
+#define PURE_PURSUIT 4
 #define WAIT 5
+#define STOP 7
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,8 +54,9 @@ typedef struct {
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
 
-static volatile weight rx;
+static volatile data rx;
 int state = 5;
 
 int speedL = 0;
@@ -90,7 +97,7 @@ static void Turn_Left(void){
 	DirPwm_Coast(&motorL); DirPwm_Coast(&motorR); HAL_Delay(200);
 }
 
-static void Turn_right(void){
+static void Turn_Right(void){
 	for(int s=0; s<=5000; s+=100){ DirPwm_SetSpeed(&motorL, -s); DirPwm_SetSpeed(&motorR, +s); HAL_Delay(10);} HAL_Delay(150);
 	speedL = 0; speedR = 0;
 	DirPwm_Coast(&motorL); DirPwm_Coast(&motorR); HAL_Delay(200);
@@ -111,7 +118,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   if (huart->Instance == USART1) {
 	  state = rx.command;
 	  HAL_UART_Receive_IT(&huart1, (uint8_t *)&rx, sizeof(rx));
-	  HAL_UART_Transmit(&huart1, (uint8_t*)&rx1, 1, 10); // 에코백
+	  HAL_UART_Transmit(&huart1, (uint8_t*)&rx, 1, 10); // 에코백
   }
 }
 
@@ -159,28 +166,28 @@ int main(void)
   while (1)
   {
 	  if(state==WAIT) continue;
-	  switch(rx.command){
-  	  	  case 0:
+	  switch(state){
+  	  	  case STOP:
+  	  		  Motors_Stop();
+  	  		  break;
+  	  	  case MOVE_BACK:
   	  		  Motors_Move_Back();
   	  		  break;
-  	  	  case 1:
-  			  Turn_right();
+  	  	  case TURN_RIGHT:
+  			  Turn_Right();
   			  break;
-  	  	  case 2:
+  	  	  case TURN_LEFT:
   			  Turn_Left();
   			  break;
-  	  	  case 3:
+  	  	  case MOVE_FRONT:
   			  Motors_Move_Front();
   			  break;
-	  	  case 4:
+	  	  case PURE_PURSUIT:
 	  		  speedL *= rx.left;
 			  speedR *= rx.right;
 			  DirPwm_SetSpeed(&motorL, speedL);
 			  DirPwm_SetSpeed(&motorR, speedR);
 			  break;
-	  	  case 7:
-	  		  Motors_Stop();
-	  		  break;
 	  	  default:
 	  		  break;
 	  }
