@@ -118,7 +118,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   if (huart->Instance == USART1) {
 	  state = rx.command;
 	  HAL_UART_Receive_IT(&huart1, (uint8_t *)&rx, sizeof(rx));
-	  HAL_UART_Transmit(&huart1, (uint8_t*)&rx, 1, 10); // 에코백
+	  //HAL_UART_Transmit(&huart1, (uint8_t*)&rx, 1, 10); // 에코백
   }
 }
 
